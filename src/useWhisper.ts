@@ -10,7 +10,7 @@ import type {
 import { RecordRTCPromisesHandler, StereoAudioRecorder } from 'recordrtc'
 import { Mp3Encoder } from 'lamejs'
 import hark from 'hark'
-import createFFmpeg from '@ffmpeg/ffmpeg'
+import { createFFmpeg } from '@ffmpeg/ffmpeg'
 import axios from 'axios'
 
 import {
