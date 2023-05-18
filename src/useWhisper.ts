@@ -3,7 +3,16 @@ import type { RawAxiosRequestHeaders } from 'axios'
 import type { Harker } from 'hark'
 import type { Encoder } from 'lamejs'
 import { useEffect, useRef, useState } from 'react'
-import type { Options, RecordRTCPromisesHandler } from 'recordrtc'
+import type {
+  Options,
+  RecordRTCPromisesHandler as RecordRTCPromisesHandlerType,
+} from 'recordrtc'
+import { RecordRTCPromisesHandler, StereoAudioRecorder } from 'recordrtc'
+import { Mp3Encoder } from 'lamejs'
+import hark from 'hark'
+import createFFmpeg from '@ffmpeg/ffmpeg'
+import axios from 'axios'
+
 import {
   defaultStopTimeout,
   ffmpegCoreUrl,
@@ -78,7 +87,7 @@ export const useWhisper: UseWhisperHook = (config) => {
   const chunks = useRef<Blob[]>([])
   const encoder = useRef<Encoder>()
   const listener = useRef<Harker>()
-  const recorder = useRef<RecordRTCPromisesHandler>()
+  const recorder = useRef<RecordRTCPromisesHandlerType>()
   const stream = useRef<MediaStream>()
   const timeout = useRef<UseWhisperTimeout>(defaultTimeout)
 
@@ -170,9 +179,6 @@ export const useWhisper: UseWhisperHook = (config) => {
       }
       if (stream.current) {
         if (!recorder.current) {
-          const {
-            default: { RecordRTCPromisesHandler, StereoAudioRecorder },
-          } = await import('recordrtc')
           const recorderConfig: Options = {
             mimeType: 'audio/wav',
             numberOfAudioChannels: 1, // mono
@@ -189,7 +195,6 @@ export const useWhisper: UseWhisperHook = (config) => {
           )
         }
         if (!encoder.current) {
-          const { Mp3Encoder } = await import('lamejs')
           encoder.current = new Mp3Encoder(1, 44100, 96)
         }
         const recordState = await recorder.current.getState()
@@ -224,7 +229,6 @@ export const useWhisper: UseWhisperHook = (config) => {
         audio: true,
       })
       if (!listener.current) {
-        const { default: hark } = await import('hark')
         listener.current = hark(stream.current, {
           interval: 100,
           play: false,
@@ -383,7 +387,6 @@ export const useWhisper: UseWhisperHook = (config) => {
           setTranscribing(true)
           let blob = await recorder.current.getBlob()
           if (removeSilence) {
-            const { createFFmpeg } = await import('@ffmpeg/ffmpeg')
             const ffmpeg = createFFmpeg({
               mainName: 'main',
               corePath: ffmpegCoreUrl,
@@ -518,7 +521,7 @@ export const useWhisper: UseWhisperHook = (config) => {
       if (apiKey) {
         headers['Authorization'] = `Bearer ${apiKey}`
       }
-      const { default: axios } = await import('axios')
+
       const response = await axios.post(whisperApiEndpoint + mode, body, {
         headers,
       })
